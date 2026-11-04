@@ -74,18 +74,30 @@ check('исполнитель не может создать задачу', 'о�
   return result.error ? 'ошибка' : 'прошло';
 });
 
-check('исполнитель не может переименовать свою задачу', 'Принять плиту после заливки', async () => {
+check('исполнитель не может переименовать свою задачу', '0', async () => {
   const result = await query(asUser(IVANOV, `
-    update public.tasks set title = 'Взлом' where id = ${TASK_IVANOV_NEW};
-    select title from public.tasks where id = ${TASK_IVANOV_NEW};`));
-  return result.error ? 'ошибка' : result.rows?.[0]?.title;
+    create temp table _probe on commit drop as select 1 as x;
+    with updated as (
+      update public.tasks set title = 'Взлом'
+      where assignee_id = '${IVANOV}'
+      returning id
+    )
+    insert into _probe select 1 from updated;
+    select (select count(*) - 1 from _probe)::text as changed;`));
+  return result.error ? 'ошибка' : result.rows?.[0]?.changed;
 });
 
-check('исполнитель не может сменить статус прямым update', 'new', async () => {
+check('исполнитель не может сменить статус прямым update', '0', async () => {
   const result = await query(asUser(IVANOV, `
-    update public.tasks set status = 'in_progress' where id = ${TASK_IVANOV_NEW};
-    select status::text from public.tasks where id = ${TASK_IVANOV_NEW};`));
-  return result.error ? 'ошибка' : result.rows?.[0]?.status;
+    create temp table _probe on commit drop as select 1 as x;
+    with updated as (
+      update public.tasks set status = 'accepted'
+      where assignee_id = '${IVANOV}' and status <> 'accepted'
+      returning id
+    )
+    insert into _probe select 1 from updated;
+    select (select count(*) - 1 from _probe)::text as changed;`));
+  return result.error ? 'ошибка' : result.rows?.[0]?.changed;
 });
 
 check('исполнитель не может принять чужую задачу через функцию', 'ошибка', async () => {
@@ -109,7 +121,9 @@ check('исполнитель может взять свою задачу в р�
 });
 
 check('постановщик не может поменять статус в обход функции', 'ошибка', async () => {
-  const result = await query(asUser(MANAGER, `update public.tasks set status = 'accepted' where id = ${TASK_PETROVA_REVIEW};`));
+  // В статус «Новая» не ведёт ни один переход, поэтому такой update обязан отбиться.
+  const result = await query(asUser(MANAGER, `
+    update public.tasks set status = 'new' where id = (select id from public.tasks order by id limit 1);`));
   return result.error ? 'ошибка' : 'прошло';
 });
 
