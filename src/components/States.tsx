@@ -1,3 +1,5 @@
+import { Link } from 'react-router-dom';
+
 export function Spinner({ label = 'Загрузка' }: { label?: string }) {
   return (
     <div className="flex items-center gap-3 py-10 text-sm text-ink-500">
@@ -18,6 +20,25 @@ export function ErrorNote({ message, onRetry }: { message: string; onRetry?: () 
       )}
     </div>
   );
+}
+
+// Отказ доступа это не сбой, а штатное поведение: показываем спокойную карточку.
+export function LoadError({ message, onRetry }: { message: string; onRetry?: () => void }) {
+  if (/недоступн|не найден/i.test(message)) {
+    return (
+      <div className="card flex flex-col items-start gap-2 px-6 py-8">
+        <p className="text-[15px] font-medium">Запись недоступна</p>
+        <p className="max-w-md text-sm text-ink-500">
+          {message}. Скорее всего, она назначена другому сотруднику или её удалили.
+        </p>
+        <Link to="/" className="btn btn-secondary mt-2">
+          К списку объектов
+        </Link>
+      </div>
+    );
+  }
+
+  return <ErrorNote message={message} onRetry={onRetry} />;
 }
 
 export function EmptyState({ title, hint, action }: { title: string; hint?: string; action?: React.ReactNode }) {

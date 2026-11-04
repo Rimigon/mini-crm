@@ -10,7 +10,7 @@ import {
   fetchWorkers,
 } from '../lib/api';
 import { useAsync } from '../hooks/useAsync';
-import { EmptyState, ErrorNote, Spinner } from '../components/States';
+import { EmptyState, ErrorNote, LoadError, Spinner } from '../components/States';
 import { StatusBadge } from '../components/StatusBadge';
 import { ObjectFormModal } from '../components/ObjectFormModal';
 import { TaskFormModal } from '../components/TaskFormModal';
@@ -65,7 +65,7 @@ export function ObjectPage() {
 
       {actionError && <ErrorNote message={actionError} />}
       {object.loading && <Spinner />}
-      {object.error && <ErrorNote message={object.error} onRetry={object.reload} />}
+      {object.error && <LoadError message={object.error} onRetry={object.reload} />}
 
       {object.data && (
         <div className="flex flex-wrap items-start justify-between gap-4">
@@ -191,3 +191,4 @@ function TaskRow({
     </div>
   );
 }
+

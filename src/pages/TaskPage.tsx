@@ -10,7 +10,7 @@ import {
   updateTask,
 } from '../lib/api';
 import { useAsync } from '../hooks/useAsync';
-import { ErrorNote, Spinner } from '../components/States';
+import { ErrorNote, LoadError, Spinner } from '../components/States';
 import { StatusBadge } from '../components/StatusBadge';
 import { Modal } from '../components/Modal';
 import { formatDateTime } from '../lib/format';
@@ -63,7 +63,7 @@ export function TaskPage() {
 
       {actionError && <ErrorNote message={actionError} />}
       {task.loading && <Spinner />}
-      {task.error && <ErrorNote message={task.error} onRetry={task.reload} />}
+      {task.error && <LoadError message={task.error} onRetry={task.reload} />}
 
       {current && (
         <>
@@ -365,3 +365,4 @@ function EditTaskModal({
     </Modal>
   );
 }
+
