@@ -1,23 +1,13 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
 import { supabase } from '../lib/supabase';
 import { fetchProfile } from '../lib/api';
-import type { Profile } from '../lib/types';
-
-type AuthState = {
-  status: 'loading' | 'signed-out' | 'signed-in';
-  profile: Profile | null;
-  email: string | null;
-  signIn: (email: string, password: string) => Promise<void>;
-  signOut: () => Promise<void>;
-  error: string | null;
-};
-
-const AuthContext = createContext<AuthState | null>(null);
+import { AuthContext } from './context';
+import type { AuthState } from './context';
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [status, setStatus] = useState<AuthState['status']>('loading');
-  const [profile, setProfile] = useState<Profile | null>(null);
+  const [profile, setProfile] = useState<AuthState['profile']>(null);
   const [email, setEmail] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -94,14 +84,3 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
-export function useAuth(): AuthState {
-  const context = useContext(AuthContext);
-  if (!context) throw new Error('useAuth вызван вне AuthProvider');
-  return context;
-}
-
-export function useProfile(): Profile {
-  const { profile } = useAuth();
-  if (!profile) throw new Error('Нет активного профиля');
-  return profile;
-}

@@ -1,5 +1,5 @@
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom';
-import { useAuth } from '../auth/AuthContext';
+import { useAuth } from '../auth/useAuth';
 
 function NavItem({ to, children }: { to: string; children: React.ReactNode }) {
   return (
@@ -32,6 +32,12 @@ export function Layout() {
 
   return (
     <div className="min-h-dvh bg-paper">
+      <a
+        href="#main"
+        className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-3 focus:z-30 focus:rounded-md focus:bg-surface focus:px-3 focus:py-2 focus:text-sm focus:shadow"
+      >
+        Перейти к содержимому
+      </a>
       <header className="sticky top-0 z-20 border-b border-line bg-paper/85 backdrop-blur-md">
         <div className="mx-auto flex h-16 max-w-[1120px] items-center gap-4 px-5 sm:gap-10 sm:px-6">
           <Link to="/" className="flex items-baseline gap-2.5">
@@ -63,7 +69,7 @@ export function Layout() {
         </div>
       </header>
 
-      <main className="mx-auto w-full max-w-[1120px] px-5 py-9 sm:px-6 sm:py-12">
+      <main id="main" className="mx-auto w-full max-w-[1120px] px-5 py-9 sm:px-6 sm:py-12">
         <div key={location.pathname} className="page-in">
           <Outlet />
         </div>
@@ -78,3 +84,4 @@ export function Layout() {
     </div>
   );
 }
+

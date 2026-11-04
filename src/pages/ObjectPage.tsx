@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { useProfile } from '../auth/AuthContext';
+import { useProfile } from '../auth/useAuth';
 import {
   createTask,
   deleteObject,
@@ -158,25 +158,29 @@ export function ObjectPage() {
         </div>
       </section>
 
-      <ObjectFormModal
-        open={editOpen}
-        initial={object.data}
-        onClose={() => setEditOpen(false)}
-        onSubmit={async (values) => {
-          await updateObject(id, values);
-          await object.reload();
-        }}
-      />
+      {editOpen && (
+        <ObjectFormModal
+          open
+          initial={object.data}
+          onClose={() => setEditOpen(false)}
+          onSubmit={async (values) => {
+            await updateObject(id, values);
+            await object.reload();
+          }}
+        />
+      )}
 
-      <TaskFormModal
-        open={createOpen}
-        workers={workers.data ?? []}
-        onClose={() => setCreateOpen(false)}
-        onSubmit={async (values) => {
-          await createTask({ ...values, object_id: id });
-          await tasks.reload();
-        }}
-      />
+      {createOpen && (
+        <TaskFormModal
+          open
+          workers={workers.data ?? []}
+          onClose={() => setCreateOpen(false)}
+          onSubmit={async (values) => {
+            await createTask({ ...values, object_id: id });
+            await tasks.reload();
+          }}
+        />
+      )}
     </div>
   );
 }
@@ -206,5 +210,6 @@ function TaskRow({ task, canDelete, onDelete }: { task: Task; canDelete: boolean
     </div>
   );
 }
+
 
 

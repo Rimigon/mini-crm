@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import type { FormEvent } from 'react';
 import { Modal } from './Modal';
+import { LIMITS } from '../lib/limits';
 import type { Profile } from '../lib/types';
 
 type Props = {
@@ -17,17 +18,9 @@ type Props = {
 export function TaskFormModal({ open, workers, onClose, onSubmit }: Props) {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [assignee, setAssignee] = useState('');
+  const [assignee, setAssignee] = useState(workers[0]?.id ?? '');
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
-
-  useEffect(() => {
-    if (!open) return;
-    setTitle('');
-    setDescription('');
-    setAssignee(workers[0]?.id ?? '');
-    setError(null);
-  }, [open, workers]);
 
   async function submit(event: FormEvent) {
     event.preventDefault();
@@ -72,6 +65,7 @@ export function TaskFormModal({ open, workers, onClose, onSubmit }: Props) {
             id="task-title"
             className="field"
             required
+            maxLength={LIMITS.taskTitle}
             value={title}
             onChange={(event) => setTitle(event.target.value)}
             placeholder="Заказать бетон М300 на плиту"
@@ -84,6 +78,7 @@ export function TaskFormModal({ open, workers, onClose, onSubmit }: Props) {
           <textarea
             id="task-description"
             className="field min-h-24 resize-y"
+            maxLength={LIMITS.taskDescription}
             value={description}
             onChange={(event) => setDescription(event.target.value)}
             placeholder="Что именно нужно сделать"
@@ -112,3 +107,4 @@ export function TaskFormModal({ open, workers, onClose, onSubmit }: Props) {
     </Modal>
   );
 }
+

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type { FormEvent } from 'react';
-import { useAuth } from '../auth/AuthContext';
+import { useAuth } from '../auth/useAuth';
 
 export function LoginPage() {
   const { signIn, error } = useAuth();
@@ -127,3 +127,4 @@ export function LoginPage() {
     </div>
   );
 }
+

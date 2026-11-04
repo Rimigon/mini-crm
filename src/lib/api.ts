@@ -1,21 +1,11 @@
 import { supabase } from './supabase';
+import { humanError } from './errors';
 import type { HistoryEntry, Profile, SiteObject, Task, TaskStatus } from './types';
 
-// Сообщения базы уже написаны на русском языке и checked в триггерах,
-// поэтому показываем их как есть, а технические тексты переводим на человеческий.
-function humanError(error: { message: string; code?: string } | null): never {
-  const message = error?.message ?? 'Неизвестная ошибка';
-
-  if (message.includes('row-level security')) {
-    throw new Error('Действие запрещено правами доступа');
+function assertAffected(rows: { id: string }[] | null, message: string): void {
+  if (!rows || rows.length === 0) {
+    throw new Error(message);
   }
-  if (message.includes('permission denied')) {
-    throw new Error('Недостаточно прав для этого действия');
-  }
-  if (message.includes('duplicate key')) {
-    throw new Error('Такая запись уже существует');
-  }
-  throw new Error(message);
 }
 
 export async function fetchProfile(userId: string): Promise<Profile> {
@@ -67,13 +57,15 @@ export async function createObject(values: { name: string; address: string }): P
 }
 
 export async function updateObject(id: string, values: { name: string; address: string }): Promise<void> {
-  const { error } = await supabase.from('objects').update(values).eq('id', id);
+  const { data, error } = await supabase.from('objects').update(values).eq('id', id).select('id');
   if (error) humanError(error);
+  assertAffected(data, 'Объект не найден или у вас нет прав на его изменение');
 }
 
 export async function deleteObject(id: string): Promise<void> {
-  const { error } = await supabase.from('objects').delete().eq('id', id);
+  const { data, error } = await supabase.from('objects').delete().eq('id', id).select('id');
   if (error) humanError(error);
+  assertAffected(data, 'Объект не найден или у вас нет прав на его удаление');
 }
 
 const taskSelect = `
@@ -125,13 +117,15 @@ export async function updateTask(
   id: string,
   values: { title?: string; description?: string | null; assignee_id?: string },
 ): Promise<void> {
-  const { error } = await supabase.from('tasks').update(values).eq('id', id);
+  const { data, error } = await supabase.from('tasks').update(values).eq('id', id).select('id');
   if (error) humanError(error);
+  assertAffected(data, 'Задача не найдена или у вас нет прав на её изменение');
 }
 
 export async function deleteTask(id: string): Promise<void> {
-  const { error } = await supabase.from('tasks').delete().eq('id', id);
+  const { data, error } = await supabase.from('tasks').delete().eq('id', id).select('id');
   if (error) humanError(error);
+  assertAffected(data, 'Задача не найдена или у вас нет прав на её удаление');
 }
 
 // Единственный путь смены статуса: проверка роли, назначения и перехода живёт в базе.
@@ -147,4 +141,5 @@ export async function changeTaskStatus(
   });
   if (error) humanError(error);
 }
+
 

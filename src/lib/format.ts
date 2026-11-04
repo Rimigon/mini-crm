@@ -27,3 +27,4 @@ export function pluralize(count: number, one: string, few: string, many: string)
   if (mod10 >= 2 && mod10 <= 4 && (mod100 < 10 || mod100 >= 20)) return few;
   return many;
 }
+

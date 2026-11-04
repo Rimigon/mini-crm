@@ -1,11 +1,13 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
-import { AuthProvider, useAuth } from './auth/AuthContext';
+import { AuthProvider } from './auth/AuthContext';
+import { useAuth } from './auth/useAuth';
 import { Layout } from './components/Layout';
 import { LoginPage } from './pages/LoginPage';
 import { ObjectsPage } from './pages/ObjectsPage';
 import { ObjectPage } from './pages/ObjectPage';
 import { TaskPage } from './pages/TaskPage';
 import { MyTasksPage } from './pages/MyTasksPage';
+import { NotFoundPage } from './pages/NotFoundPage';
 import { Spinner } from './components/States';
 
 function AppRoutes() {
@@ -31,7 +33,7 @@ function AppRoutes() {
           path="/my-tasks"
           element={profile.role === 'worker' ? <MyTasksPage /> : <Navigate to="/" replace />}
         />
-        <Route path="*" element={<Navigate to="/" replace />} />
+        <Route path="*" element={<NotFoundPage />} />
       </Route>
     </Routes>
   );
@@ -46,3 +48,4 @@ export function App() {
     </BrowserRouter>
   );
 }
+

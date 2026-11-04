@@ -1,12 +1,19 @@
 {
   "name": "mini-crm",
   "private": true,
-  "version": "0.0.0",
+  "packageManager": "pnpm@10.0.0",
+  "engines": {
+    "node": ">=20"
+  },
+  "version": "0.1.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "oxlint",
+    "typecheck": "tsc -b",
+    "test": "vitest run",
+    "check:security": "node scripts/check-security.mjs",
     "preview": "vite preview"
   },
   "dependencies": {
@@ -25,6 +32,7 @@
     "pg": "^8.23.1",
     "tailwindcss": "^4.3.4",
     "typescript": "~7.0.2",
-    "vite": "^8.3.5"
+    "vite": "^8.3.5",
+    "vitest": "^5.1.0"
   }
 }

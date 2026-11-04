@@ -11,7 +11,10 @@ export function Spinner({ label = 'Загрузка' }: { label?: string }) {
 
 export function ErrorNote({ message, onRetry }: { message: string; onRetry?: () => void }) {
   return (
-    <div className="flex flex-wrap items-center gap-3 rounded-lg border border-rework/20 bg-rework-soft px-4 py-3 text-[13px] text-rework">
+    <div
+      role="alert"
+      className="flex flex-wrap items-center gap-3 rounded-lg border border-rework/20 bg-rework-soft px-4 py-3 text-[13px] text-rework"
+    >
       <span>{message}</span>
       {onRetry && (
         <button type="button" className="btn btn-secondary ml-auto bg-surface/60" onClick={onRetry}>
@@ -57,3 +60,4 @@ export function EmptyState({
     </div>
   );
 }
+

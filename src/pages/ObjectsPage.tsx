@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { useProfile } from '../auth/AuthContext';
+import { useProfile } from '../auth/useAuth';
 import { createObject, deleteObject, fetchObjects, updateObject } from '../lib/api';
 import { useAsync } from '../hooks/useAsync';
 import { EmptyState, ErrorNote, Spinner } from '../components/States';
@@ -161,19 +161,22 @@ export function ObjectsPage() {
         </div>
       )}
 
-      <ObjectFormModal
-        open={modalOpen}
-        initial={editing}
-        onClose={() => setModalOpen(false)}
-        onSubmit={async (values) => {
-          if (editing) await updateObject(editing.id, values);
-          else await createObject(values);
-          await reload();
-        }}
-      />
+      {modalOpen && (
+        <ObjectFormModal
+          open
+          initial={editing}
+          onClose={() => setModalOpen(false)}
+          onSubmit={async (values) => {
+            if (editing) await updateObject(editing.id, values);
+            else await createObject(values);
+            await reload();
+          }}
+        />
+      )}
     </div>
   );
 }
+
 
 
 

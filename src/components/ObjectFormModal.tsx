@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import type { FormEvent } from 'react';
 import { Modal } from './Modal';
+import { LIMITS } from '../lib/limits';
 import type { SiteObject } from '../lib/types';
 
 type Props = {
@@ -11,17 +12,10 @@ type Props = {
 };
 
 export function ObjectFormModal({ open, initial, onClose, onSubmit }: Props) {
-  const [name, setName] = useState('');
-  const [address, setAddress] = useState('');
+  const [name, setName] = useState(initial?.name ?? '');
+  const [address, setAddress] = useState(initial?.address ?? '');
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
-
-  useEffect(() => {
-    if (!open) return;
-    setName(initial?.name ?? '');
-    setAddress(initial?.address ?? '');
-    setError(null);
-  }, [open, initial]);
 
   async function submit(event: FormEvent) {
     event.preventDefault();
@@ -62,6 +56,7 @@ export function ObjectFormModal({ open, initial, onClose, onSubmit }: Props) {
             id="object-name"
             className="field"
             required
+            maxLength={LIMITS.objectName}
             value={name}
             onChange={(event) => setName(event.target.value)}
             placeholder="ЖК «Северный парк», корпус 3"
@@ -75,6 +70,7 @@ export function ObjectFormModal({ open, initial, onClose, onSubmit }: Props) {
             id="object-address"
             className="field"
             required
+            maxLength={LIMITS.objectAddress}
             value={address}
             onChange={(event) => setAddress(event.target.value)}
             placeholder="г. Воскресенск, ул. Ленина, 12"
@@ -85,3 +81,4 @@ export function ObjectFormModal({ open, initial, onClose, onSubmit }: Props) {
     </Modal>
   );
 }
+

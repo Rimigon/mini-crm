@@ -28,3 +28,4 @@ export function StatusBadge({ status }: { status: TaskStatus }) {
 export function StatusDot({ status }: { status: TaskStatus }) {
   return <span className={`size-1.5 shrink-0 rounded-full ${dot[status]}`} aria-hidden />;
 }
+

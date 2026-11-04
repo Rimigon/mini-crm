@@ -13,7 +13,7 @@
   --color-ink-900: #16150f;
   --color-ink-700: #43413a;
   --color-ink-500: #6f6c62;
-  --color-ink-400: #7a756a;
+  --color-ink-400: #6f6a60;
 
   /* синий чертёж */
   --color-accent: #1f3fb0;
@@ -260,5 +260,6 @@
     border-top: 1px solid var(--color-line);
   }
 }
+
 
 

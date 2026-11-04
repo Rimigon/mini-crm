@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { useProfile } from '../auth/AuthContext';
+import { useProfile } from '../auth/useAuth';
 import { fetchTasks } from '../lib/api';
 import { useAsync } from '../hooks/useAsync';
 import { EmptyState, ErrorNote, Spinner } from '../components/States';
@@ -105,6 +105,7 @@ function MyTaskRow({ task }: { task: Task }) {
     </Link>
   );
 }
+
 
 
 

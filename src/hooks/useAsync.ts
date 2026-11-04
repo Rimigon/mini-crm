@@ -27,3 +27,4 @@ export function useAsync<T>(loader: () => Promise<T>, deps: unknown[] = []) {
 
   return { ...state, reload: run };
 }
+

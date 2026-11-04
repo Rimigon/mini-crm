@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { useProfile } from '../auth/AuthContext';
+import { useProfile } from '../auth/useAuth';
 import {
   changeTaskStatus,
   deleteTask,
@@ -14,6 +14,8 @@ import { ErrorNote, LoadError, Spinner } from '../components/States';
 import { StatusBadge, StatusDot } from '../components/StatusBadge';
 import { Modal } from '../components/Modal';
 import { formatDate, formatDateTime } from '../lib/format';
+import { availableTaskActions } from '../lib/rules';
+import { LIMITS } from '../lib/limits';
 import { STATUS_LABELS, type Task, type TaskStatus } from '../lib/types';
 
 export function TaskPage() {
@@ -46,9 +48,12 @@ export function TaskPage() {
   }
 
   const current = task.data;
-  const canTakeWork = !isManager && current && (current.status === 'new' || current.status === 'rework');
-  const canSendToReview = !isManager && current?.status === 'in_progress';
-  const canReview = isManager && current?.status === 'review';
+  const actions = current
+    ? availableTaskActions(current.status, profile.role, current.assignee_id === profile.id)
+    : [];
+  const canTakeWork = actions.includes('take');
+  const canSendToReview = actions.includes('submit');
+  const canReview = actions.includes('accept');
 
   return (
     <div>
@@ -281,6 +286,7 @@ export function TaskPage() {
         <textarea
           id="rework-comment"
           className="field min-h-24 resize-y"
+          maxLength={LIMITS.comment}
           value={reworkComment}
           onChange={(event) => setReworkComment(event.target.value)}
           placeholder="Без комментария задача не вернётся"
@@ -366,6 +372,7 @@ function EditTaskModal({
           <input
             id="edit-title"
             className="field"
+            maxLength={LIMITS.taskTitle}
             value={title}
             onChange={(event) => setTitle(event.target.value)}
           />
@@ -377,6 +384,7 @@ function EditTaskModal({
           <textarea
             id="edit-description"
             className="field min-h-24 resize-y"
+            maxLength={LIMITS.taskDescription}
             value={description}
             onChange={(event) => setDescription(event.target.value)}
           />
@@ -403,3 +411,4 @@ function EditTaskModal({
     </Modal>
   );
 }
+
