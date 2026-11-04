@@ -124,7 +124,9 @@ export function TaskPage() {
               )}
               {isManager && (
                 <>
-                  <span className="mx-1 hidden h-6 w-px self-center bg-line sm:block" aria-hidden />
+                  {canReview && (
+                    <span className="mx-1 hidden h-6 w-px self-center bg-line sm:block" aria-hidden />
+                  )}
                   <button
                     type="button"
                     className="btn btn-ghost px-2.5 py-1 text-[13px]"
