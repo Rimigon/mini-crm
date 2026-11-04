@@ -57,8 +57,11 @@ const asUser = (userId, body) => `
 const cases = [];
 const check = (label, expect, run) => cases.push({ label, expect, run });
 
-check('исполнитель видит только свои задачи (4 из 7)', '4', async () =>
-  (await query(asUser(IVANOV, `select count(*)::text as n from public.tasks;`))).rows?.[0]?.n);
+check('исполнитель видит только свои задачи', 'совпадает', async () => {
+  const own = await query(`select count(*)::text as n from public.tasks where assignee_id = '${IVANOV}';`);
+  const visible = await query(asUser(IVANOV, `select count(*)::text as n from public.tasks;`));
+  return own.rows?.[0]?.n === visible.rows?.[0]?.n ? 'совпадает' : `видит ${visible.rows?.[0]?.n} из ${own.rows?.[0]?.n}`;
+});
 
 check('исполнитель не видит чужую задачу по прямому id', '0', async () =>
   (await query(asUser(IVANOV, `select count(*)::text as n from public.tasks where id = ${TASK_PETROVA_REVIEW};`)))
@@ -123,7 +126,8 @@ check('исполнитель может взять свою задачу в р�
 check('постановщик не может поменять статус в обход функции', 'ошибка', async () => {
   // В статус «Новая» не ведёт ни один переход, поэтому такой update обязан отбиться.
   const result = await query(asUser(MANAGER, `
-    update public.tasks set status = 'new' where id = (select id from public.tasks order by id limit 1);`));
+    update public.tasks set status = 'new'
+    where id = (select id from public.tasks where status <> 'new' order by id limit 1);`));
   return result.error ? 'ошибка' : 'прошло';
 });
 
@@ -152,8 +156,11 @@ check('без входа таблицы недоступны', 'ошибка', a
   return result.error ? 'ошибка' : 'прошло';
 });
 
-check('постановщик видит все задачи', '7', async () =>
-  (await query(asUser(MANAGER, `select count(*)::text as n from public.tasks;`))).rows?.[0]?.n);
+check('постановщик видит все задачи', 'совпадает', async () => {
+  const total = await query(`select count(*)::text as n from public.tasks;`);
+  const visible = await query(asUser(MANAGER, `select count(*)::text as n from public.tasks;`));
+  return total.rows?.[0]?.n === visible.rows?.[0]?.n ? 'совпадает' : `видит ${visible.rows?.[0]?.n} из ${total.rows?.[0]?.n}`;
+});
 
 for (const item of cases) {
   const actual = await item.run();
