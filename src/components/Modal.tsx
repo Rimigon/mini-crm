@@ -5,12 +5,13 @@ import { createPortal } from 'react-dom';
 type Props = {
   open: boolean;
   title: string;
+  eyebrow?: string;
   onClose: () => void;
   children: ReactNode;
   footer?: ReactNode;
 };
 
-export function Modal({ open, title, onClose, children, footer }: Props) {
+export function Modal({ open, title, eyebrow, onClose, children, footer }: Props) {
   const panel = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -30,32 +31,33 @@ export function Modal({ open, title, onClose, children, footer }: Props) {
   if (!open) return null;
 
   return createPortal(
-    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-ink-900/35 p-4 pt-[10vh]">
-      <div
-        className="absolute inset-0"
-        onClick={onClose}
-        aria-hidden
-      />
+    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-[#16150f]/30 p-4 pt-[10vh]">
+      <div className="absolute inset-0" onClick={onClose} aria-hidden />
       <div
         ref={panel}
         role="dialog"
         aria-modal="true"
         aria-label={title}
-        className="relative w-full max-w-md rounded-xl border border-line bg-surface shadow-xl"
+        className="relative w-full max-w-[440px] rounded-[14px] border border-line bg-surface shadow-[0_24px_60px_-20px_rgba(22,21,15,0.28)] motion-safe:animate-[sheet-in_180ms_cubic-bezier(0.23,1,0.32,1)]"
       >
-        <div className="flex items-center justify-between border-b border-line px-5 py-3.5">
-          <h2 className="text-[15px] font-semibold">{title}</h2>
+        <div className="flex items-start justify-between gap-4 px-6 pt-5">
+          <div>
+            {eyebrow && <p className="micro mb-1.5">{eyebrow}</p>}
+            <h2 className="font-display text-[18px] leading-snug">{title}</h2>
+          </div>
           <button
             type="button"
-            className="grid size-7 place-items-center rounded-md text-ink-400 transition-colors hover:bg-paper hover:text-ink-900"
+            className="btn btn-ghost -mr-2 -mt-1 size-9 p-0 text-[15px] text-ink-400"
             onClick={onClose}
             aria-label="Закрыть"
           >
             ✕
           </button>
         </div>
-        <div className="px-5 py-4">{children}</div>
-        {footer && <div className="flex justify-end gap-2 border-t border-line px-5 py-3.5">{footer}</div>}
+        <div className="px-6 py-5">{children}</div>
+        {footer && (
+          <div className="flex justify-end gap-2 border-t border-line px-6 py-4">{footer}</div>
+        )}
       </div>
     </div>,
     document.body,

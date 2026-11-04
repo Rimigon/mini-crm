@@ -11,9 +11,9 @@ import {
 } from '../lib/api';
 import { useAsync } from '../hooks/useAsync';
 import { ErrorNote, LoadError, Spinner } from '../components/States';
-import { StatusBadge } from '../components/StatusBadge';
+import { StatusBadge, StatusDot } from '../components/StatusBadge';
 import { Modal } from '../components/Modal';
-import { formatDateTime } from '../lib/format';
+import { formatDate, formatDateTime } from '../lib/format';
 import { STATUS_LABELS, type Task, type TaskStatus } from '../lib/types';
 
 export function TaskPage() {
@@ -46,44 +46,39 @@ export function TaskPage() {
   }
 
   const current = task.data;
-  const canTakeWork =
-    !isManager && current && (current.status === 'new' || current.status === 'rework');
+  const canTakeWork = !isManager && current && (current.status === 'new' || current.status === 'rework');
   const canSendToReview = !isManager && current?.status === 'in_progress';
   const canReview = isManager && current?.status === 'review';
 
   return (
-    <div className="space-y-6">
+    <div>
       <button
         type="button"
-        className="inline-flex items-center gap-1 text-sm text-ink-500 transition-colors hover:text-ink-900"
+        className="inline-flex items-center gap-1.5 text-[13px] text-ink-500 transition-colors duration-150 hover:text-ink-900"
         onClick={() => navigate(-1)}
       >
         ← Назад
       </button>
 
-      {actionError && <ErrorNote message={actionError} />}
-      {task.loading && <Spinner />}
+      {actionError && (
+        <div className="mt-6">
+          <ErrorNote message={actionError} />
+        </div>
+      )}
+      {task.loading && <Spinner label="читаем задачу" />}
       {task.error && <LoadError message={task.error} onRetry={task.reload} />}
 
       {current && (
         <>
-          <div className="flex flex-wrap items-start justify-between gap-4">
-            <div className="min-w-0">
-              <div className="mb-2 flex items-center gap-2">
+          <header className="mt-6">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div className="flex flex-wrap items-center gap-3">
                 <StatusBadge status={current.status} />
+                <span className="text-[12px] text-ink-400">
+                  поставлена <span className="num">{formatDate(current.created_at)}</span>
+                </span>
               </div>
-              <h1 className="text-2xl font-semibold tracking-tight">{current.title}</h1>
-              {current.object && (
-                <Link
-                  to={`/objects/${current.object.id}`}
-                  className="mt-1.5 inline-flex items-center gap-1 text-sm text-ink-500 transition-colors hover:text-accent"
-                >
-                  {current.object.name} · {current.object.address}
-                </Link>
-              )}
-            </div>
-
-            <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-2">
               {canTakeWork && (
                 <button
                   type="button"
@@ -129,12 +124,17 @@ export function TaskPage() {
               )}
               {isManager && (
                 <>
-                  <button type="button" className="btn btn-secondary" onClick={() => setEditOpen(true)}>
+                  <span className="mx-1 hidden h-6 w-px self-center bg-line sm:block" aria-hidden />
+                  <button
+                    type="button"
+                    className="btn btn-ghost px-2.5 py-1 text-[13px]"
+                    onClick={() => setEditOpen(true)}
+                  >
                     Изменить
                   </button>
                   <button
                     type="button"
-                    className="btn btn-danger"
+                    className="btn btn-ghost px-2.5 py-1 text-[13px] text-rework hover:bg-rework-soft"
                     disabled={busy}
                     onClick={() => {
                       if (!confirm('Удалить задачу вместе с историей?')) return;
@@ -148,77 +148,108 @@ export function TaskPage() {
                   </button>
                 </>
               )}
+              </div>
             </div>
+
+            <h1 className="mt-5 max-w-[760px] text-[26px] font-semibold leading-tight tracking-[-0.025em] sm:text-[31px]">
+              {current.title}
+            </h1>
+
+            {current.object && (
+              <Link
+                to={`/objects/${current.object.id}`}
+                className="mt-3 inline-flex flex-wrap items-baseline gap-2 text-[13px] text-ink-500 transition-colors duration-150 hover:text-accent"
+              >
+                <span className="underline decoration-line-strong underline-offset-4">
+                  {current.object.name}
+                </span>
+                <span className="text-ink-400">{current.object.address}</span>
+              </Link>
+            )}
+          </header>
+
+          <div className="mt-10 grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_290px] lg:gap-12">
+            <div className="min-w-0">
+              <section>
+                <h2 className="micro">описание</h2>
+                <p className="mt-3 whitespace-pre-line text-[16px] leading-[1.7] text-ink-700">
+                  {current.description?.trim() || 'Описание не заполнено.'}
+                </p>
+              </section>
+
+              <section className="mt-12">
+                <div className="flex flex-wrap items-baseline justify-between gap-3">
+                  <h2 className="text-[19px] font-semibold tracking-[-0.02em]">История</h2>
+                  <span className="text-[12px] text-ink-400">записи неизменяемы</span>
+                </div>
+
+                {history.loading && <Spinner label="читаем историю" />}
+                {history.error && <ErrorNote message={history.error} onRetry={history.reload} />}
+
+                <ol className="mt-5 border-t border-line">
+                  {history.data?.map((entry) => (
+                    <li
+                      key={entry.id}
+                      className="grid gap-1 border-b border-line py-4 sm:grid-cols-[104px_minmax(0,1fr)] sm:gap-5"
+                    >
+                      <span className="num text-[12px] leading-6 text-ink-400">
+                        {formatDateTime(entry.changed_at)}
+                      </span>
+                      <div className="min-w-0">
+                        <p className="text-[14px] leading-6">
+                          <span className="mr-1.5 inline-block align-middle">
+                            <StatusDot status={entry.to_status} />
+                          </span>
+                          <span className="font-medium">{entry.author?.full_name ?? 'Сотрудник'}</span>{' '}
+                          {entry.from_status ? (
+                            <span className="text-ink-500">
+                              перевёл из «{STATUS_LABELS[entry.from_status as TaskStatus]}» в «
+                              {STATUS_LABELS[entry.to_status]}»
+                            </span>
+                          ) : (
+                            <span className="text-ink-500">поставил задачу</span>
+                          )}
+                        </p>
+                        {entry.comment && (
+                          <p className="mt-2 border-l-2 border-line-strong pl-3 text-[13px] leading-relaxed text-ink-700">
+                            {entry.comment}
+                          </p>
+                        )}
+                      </div>
+                    </li>
+                  ))}
+                </ol>
+              </section>
+            </div>
+
+            <aside className="card p-5 lg:sticky lg:top-24">
+              <dl className="text-[13px]">
+                <div className="border-b border-line py-3 first:pt-0">
+                  <dt className="micro">исполнитель</dt>
+                  <dd className="mt-1 font-medium">{current.assignee?.full_name ?? 'не назначен'}</dd>
+                </div>
+                <div className="border-b border-line py-3">
+                  <dt className="micro">поставил</dt>
+                  <dd className="mt-1">{current.author?.full_name ?? 'неизвестно'}</dd>
+                </div>
+                <div className="border-b border-line py-3">
+                  <dt className="micro">создана</dt>
+                  <dd className="num mt-1">{formatDateTime(current.created_at)}</dd>
+                </div>
+                <div className="py-3 pb-0">
+                  <dt className="micro">обновлена</dt>
+                  <dd className="num mt-1">{formatDateTime(current.updated_at)}</dd>
+                </div>
+              </dl>
+            </aside>
           </div>
-
-          <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_260px]">
-            <div className="card p-5">
-              <h2 className="mb-2 text-[13px] font-medium uppercase tracking-wide text-ink-400">Описание</h2>
-              <p className="whitespace-pre-line text-[15px] leading-relaxed text-ink-700">
-                {current.description?.trim() || 'Описание не заполнено.'}
-              </p>
-            </div>
-
-            <dl className="card space-y-3.5 p-5 text-sm">
-              <div>
-                <dt className="text-[13px] text-ink-400">Исполнитель</dt>
-                <dd className="mt-0.5 font-medium">{current.assignee?.full_name ?? 'не назначен'}</dd>
-              </div>
-              <div>
-                <dt className="text-[13px] text-ink-400">Поставил</dt>
-                <dd className="mt-0.5">{current.author?.full_name ?? 'неизвестно'}</dd>
-              </div>
-              <div>
-                <dt className="text-[13px] text-ink-400">Создана</dt>
-                <dd className="mt-0.5 tabular-nums">{formatDateTime(current.created_at)}</dd>
-              </div>
-              <div>
-                <dt className="text-[13px] text-ink-400">Обновлена</dt>
-                <dd className="mt-0.5 tabular-nums">{formatDateTime(current.updated_at)}</dd>
-              </div>
-            </dl>
-          </div>
-
-          <section className="space-y-3">
-            <div className="flex items-baseline justify-between">
-              <h2 className="text-[15px] font-semibold">История</h2>
-              <p className="text-[13px] text-ink-400">Записи неизменяемы</p>
-            </div>
-
-            {history.loading && <Spinner />}
-            {history.error && <ErrorNote message={history.error} onRetry={history.reload} />}
-
-            <ol className="card divide-y divide-line">
-              {history.data?.map((entry) => (
-                <li key={entry.id} className="flex gap-3 px-4 py-3.5">
-                  <span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-line-strong" aria-hidden />
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm">
-                      <span className="font-medium">{entry.author?.full_name ?? 'Сотрудник'}</span>{' '}
-                      {entry.from_status ? (
-                        <>
-                          перевёл задачу из статуса «{STATUS_LABELS[entry.from_status as TaskStatus]}» в «
-                          {STATUS_LABELS[entry.to_status]}»
-                        </>
-                      ) : (
-                        <>поставил задачу</>
-                      )}
-                    </p>
-                    {entry.comment && (
-                      <p className="mt-1.5 rounded-md bg-paper px-3 py-2 text-sm text-ink-700">{entry.comment}</p>
-                    )}
-                    <p className="mt-1 text-[13px] text-ink-400 tabular-nums">{formatDateTime(entry.changed_at)}</p>
-                  </div>
-                </li>
-              ))}
-            </ol>
-          </section>
         </>
       )}
 
       <Modal
         open={reworkOpen}
         title="Вернуть на доработку"
+        eyebrow="комментарий обязателен"
         onClose={() => setReworkOpen(false)}
         footer={
           <>
@@ -243,14 +274,14 @@ export function TaskPage() {
         }
       >
         <label className="label" htmlFor="rework-comment">
-          Комментарий исполнителю, обязательное поле
+          Что нужно исправить
         </label>
         <textarea
           id="rework-comment"
           className="field min-h-24 resize-y"
           value={reworkComment}
           onChange={(event) => setReworkComment(event.target.value)}
-          placeholder="Что нужно исправить"
+          placeholder="Без комментария задача не вернётся"
         />
       </Modal>
 
@@ -325,12 +356,17 @@ function EditTaskModal({
         </>
       }
     >
-      <div className="space-y-4">
+      <div className="space-y-5">
         <div>
           <label className="label" htmlFor="edit-title">
             Название
           </label>
-          <input id="edit-title" className="field" value={title} onChange={(event) => setTitle(event.target.value)} />
+          <input
+            id="edit-title"
+            className="field"
+            value={title}
+            onChange={(event) => setTitle(event.target.value)}
+          />
         </div>
         <div>
           <label className="label" htmlFor="edit-description">
@@ -365,4 +401,3 @@ function EditTaskModal({
     </Modal>
   );
 }
-

@@ -37,85 +37,129 @@ export function ObjectsPage() {
     }
   }
 
+  const total = data?.length ?? 0;
+
   return (
-    <div className="space-y-5">
-      <div className="flex flex-wrap items-end justify-between gap-3">
+    <div>
+      <header className="flex flex-wrap items-end justify-between gap-5">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Объекты</h1>
-          <p className="mt-1 text-sm text-ink-500">
-            {isManager
-              ? 'Стройки компании и задачи по ним'
-              : 'Объекты, на которых у вас есть задачи'}
+          <p className="micro">
+            {total > 0
+              ? `${total} ${pluralize(total, 'объект', 'объекта', 'объектов')}`
+              : 'список объектов'}
           </p>
+          <h1 className="mt-3 text-[30px] font-semibold leading-tight tracking-[-0.025em] sm:text-[34px]">
+            Объекты
+          </h1>
         </div>
         {isManager && (
           <button type="button" className="btn btn-primary" onClick={openCreate}>
             Новый объект
           </button>
         )}
-      </div>
+      </header>
 
-      {actionError && <ErrorNote message={actionError} />}
-      {loading && <Spinner />}
+      <p className="mt-4 max-w-[600px] text-[15px] leading-relaxed text-ink-500">
+        {isManager
+          ? 'Стройки компании. Задачи ставятся внутри объекта, исполнитель видит только свои.'
+          : 'Объекты, на которых у вас есть задачи.'}
+      </p>
+
+      {actionError && (
+        <div className="mt-6">
+          <ErrorNote message={actionError} />
+        </div>
+      )}
+
+      {loading && <Spinner label="читаем объекты" />}
       {error && <ErrorNote message={error} onRetry={reload} />}
 
       {!loading && !error && data && data.length === 0 && (
-        <EmptyState
-          title={isManager ? 'Объектов пока нет' : 'Вам ещё не назначили задачи'}
-          hint={
-            isManager
-              ? 'Добавьте первую стройку, чтобы ставить по ней задачи.'
-              : 'Как только постановщик назначит задачу, объект появится здесь.'
-          }
-          action={
-            isManager ? (
-              <button type="button" className="btn btn-primary" onClick={openCreate}>
-                Новый объект
-              </button>
-            ) : undefined
-          }
-        />
+        <div className="mt-10">
+          <EmptyState
+            title={isManager ? 'Объектов пока нет' : 'Задач вам ещё не назначали'}
+            hint={
+              isManager
+                ? 'Заведите первую стройку, чтобы ставить по ней задачи.'
+                : 'Когда постановщик назначит задачу, объект появится в списке.'
+            }
+            action={
+              isManager ? (
+                <button type="button" className="btn btn-primary" onClick={openCreate}>
+                  Новый объект
+                </button>
+              ) : undefined
+            }
+          />
+        </div>
       )}
 
-      <div className="grid gap-3 sm:grid-cols-2">
-        {data?.map((object) => {
-          const tasks = object.tasks ?? [];
-          const active = tasks.filter((task) => task.status !== 'accepted').length;
-          return (
-            <div key={object.id} className="card group relative p-4 transition-colors hover:border-line-strong">
-              <Link to={`/objects/${object.id}`} className="block">
-                <h2 className="pr-16 text-[15px] font-medium leading-snug">{object.name}</h2>
-                <p className="mt-1 text-sm text-ink-500">{object.address}</p>
-                <p className="mt-3 flex items-center gap-3 text-[13px] text-ink-400">
-                  <span className="tabular-nums">
-                    {tasks.length} {pluralize(tasks.length, 'задача', 'задачи', 'задач')}
+      {data && data.length > 0 && (
+        <div className="mt-10 border-t border-line">
+          {data.map((object, index) => {
+            const tasks = object.tasks ?? [];
+            const accepted = tasks.filter((task) => task.status === 'accepted').length;
+            const share = tasks.length > 0 ? Math.round((accepted / tasks.length) * 100) : 0;
+
+            return (
+              <div key={object.id} className="group row-link relative border-b border-line">
+                <div className="grid grid-cols-[32px_minmax(0,1fr)] items-start gap-4 py-6 sm:grid-cols-[40px_minmax(0,1fr)_190px] sm:items-center sm:gap-6">
+                  <span className="num pt-1 text-[12px] text-ink-400 sm:pt-0">
+                    {String(index + 1).padStart(2, '0')}
                   </span>
-                  <span aria-hidden>·</span>
-                  <span className="tabular-nums">{active} в работе</span>
-                </p>
-              </Link>
-              {isManager && (
-                <div className="absolute right-3 top-3 flex gap-1 opacity-0 transition-opacity group-hover:opacity-100 focus-within:opacity-100">
-                  <button
-                    type="button"
-                    className="btn btn-secondary px-2 py-1 text-xs"
-                    onClick={() => openEdit(object)}
-                  >
-                    Изменить
-                  </button>
-                  <button
-                    type="button"
-                    className="btn btn-danger px-2 py-1 text-xs"
-                    onClick={() => void remove(object)}
-                  >
-                    Удалить
-                  </button>
+
+                  <Link to={`/objects/${object.id}`} className="min-w-0 outline-offset-4">
+                    <span className="block text-[16px] font-medium leading-snug text-ink-900 transition-colors duration-150 group-hover:text-accent sm:text-[17px]">
+                      {object.name}
+                    </span>
+                    <span className="mt-1 block text-[13px] text-ink-500">{object.address}</span>
+                    <span className="mt-2 flex items-center gap-3 text-[12px] text-ink-400 sm:hidden">
+                      <span>{tasks.length} {pluralize(tasks.length, 'задача', 'задачи', 'задач')}</span>
+                      <span className="text-line-strong">·</span>
+                      <span>принято {accepted}</span>
+                    </span>
+                  </Link>
+
+                  <div className="hidden sm:block">
+                    <div className="flex items-baseline justify-between gap-3">
+                      <span className="text-[13px] text-ink-700">
+                        {tasks.length} {pluralize(tasks.length, 'задача', 'задачи', 'задач')}
+                      </span>
+                      <span className="num text-[12px] text-ink-400">принято {accepted}</span>
+                    </div>
+                    <div className="mt-2 flex h-[3px] w-full overflow-hidden rounded-full bg-line">
+                      <span
+                        className="h-full rounded-full bg-accepted transition-[width] duration-300"
+                        style={{ width: `${share}%` }}
+                        aria-hidden
+                      />
+                    </div>
+                  </div>
                 </div>
-              )}
-            </div>
-          );
-        })}
-      </div>
+
+                {isManager && (
+                  <div className="absolute right-0 top-1/2 hidden -translate-y-1/2 gap-1 bg-paper pl-4 opacity-0 transition-opacity duration-150 group-focus-within:opacity-100 group-hover:opacity-100 sm:flex">
+                    <button
+                      type="button"
+                      className="btn btn-secondary px-2.5 py-1 text-[12px]"
+                      onClick={() => openEdit(object)}
+                    >
+                      Изменить
+                    </button>
+                    <button
+                      type="button"
+                      className="btn btn-danger px-2.5 py-1 text-[12px]"
+                      onClick={() => void remove(object)}
+                    >
+                      Удалить
+                    </button>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
 
       <ObjectFormModal
         open={modalOpen}
@@ -130,3 +174,6 @@ export function ObjectsPage() {
     </div>
   );
 }
+
+
+

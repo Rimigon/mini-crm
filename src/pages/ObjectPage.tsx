@@ -8,13 +8,13 @@ import {
   fetchObject,
   fetchTasks,
   fetchWorkers,
+  updateObject,
 } from '../lib/api';
 import { useAsync } from '../hooks/useAsync';
 import { EmptyState, ErrorNote, LoadError, Spinner } from '../components/States';
-import { StatusBadge } from '../components/StatusBadge';
+import { StatusDot } from '../components/StatusBadge';
 import { ObjectFormModal } from '../components/ObjectFormModal';
 import { TaskFormModal } from '../components/TaskFormModal';
-import { updateObject } from '../lib/api';
 import { formatDate, pluralize } from '../lib/format';
 import { STATUS_LABELS, STATUS_ORDER, type Task } from '../lib/types';
 
@@ -58,47 +58,59 @@ export function ObjectPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <Link to="/" className="inline-flex items-center gap-1 text-sm text-ink-500 transition-colors hover:text-ink-900">
+    <div>
+      <Link
+        to="/"
+        className="inline-flex items-center gap-1.5 text-[13px] text-ink-500 transition-colors duration-150 hover:text-ink-900"
+      >
         ← Все объекты
       </Link>
 
-      {actionError && <ErrorNote message={actionError} />}
-      {object.loading && <Spinner />}
+      {actionError && (
+        <div className="mt-6">
+          <ErrorNote message={actionError} />
+        </div>
+      )}
+      {object.loading && <Spinner label="читаем объект" />}
       {object.error && <LoadError message={object.error} onRetry={object.reload} />}
 
       {object.data && (
-        <div className="flex flex-wrap items-start justify-between gap-4">
-          <div>
-            <h1 className="text-2xl font-semibold tracking-tight">{object.data.name}</h1>
-            <p className="mt-1 text-sm text-ink-500">{object.data.address}</p>
-            <p className="mt-1.5 text-[13px] text-ink-400">
-              Добавлен {formatDate(object.data.created_at)}
-            </p>
-          </div>
-          {isManager && (
-            <div className="flex gap-2">
-              <button type="button" className="btn btn-secondary" onClick={() => setEditOpen(true)}>
-                Изменить
-              </button>
-              <button type="button" className="btn btn-danger" onClick={() => void removeObject()}>
-                Удалить
-              </button>
+        <header className="mt-6">
+          <div className="flex flex-wrap items-start justify-between gap-5">
+            <div className="min-w-0">
+              <p className="micro">объект</p>
+              <h1 className="mt-3 max-w-[720px] text-[26px] font-semibold leading-tight tracking-[-0.025em] sm:text-[30px]">
+                {object.data.name}
+              </h1>
+              <p className="mt-3 text-[15px] text-ink-700">{object.data.address}</p>
+              <p className="mt-1 text-[12px] text-ink-400">
+                в системе с {formatDate(object.data.created_at)}
+              </p>
             </div>
-          )}
-        </div>
+            {isManager && (
+              <div className="flex gap-2">
+                <button type="button" className="btn btn-secondary" onClick={() => setEditOpen(true)}>
+                  Изменить
+                </button>
+                <button type="button" className="btn btn-danger" onClick={() => void removeObject()}>
+                  Удалить
+                </button>
+              </div>
+            )}
+          </div>
+        </header>
       )}
 
-      <section className="space-y-3">
-        <div className="flex items-center justify-between">
-          <h2 className="text-[15px] font-semibold">
-            Задачи
-            {tasks.data && tasks.data.length > 0 && (
-              <span className="ml-2 font-normal text-ink-400 tabular-nums">
+      <section className="mt-12">
+        <div className="flex flex-wrap items-end justify-between gap-4">
+          <div className="flex items-baseline gap-3">
+            <h2 className="text-[19px] font-semibold tracking-[-0.02em]">Задачи</h2>
+            {tasks.data && (
+              <span className="text-[12px] text-ink-400">
                 {tasks.data.length} {pluralize(tasks.data.length, 'задача', 'задачи', 'задач')}
               </span>
             )}
-          </h2>
+          </div>
           {isManager && (
             <button type="button" className="btn btn-primary" onClick={() => setCreateOpen(true)}>
               Добавить задачу
@@ -106,22 +118,30 @@ export function ObjectPage() {
           )}
         </div>
 
-        {tasks.loading && <Spinner />}
+        {tasks.loading && <Spinner label="читаем задачи" />}
         {tasks.error && <ErrorNote message={tasks.error} onRetry={tasks.reload} />}
 
         {tasks.data && tasks.data.length === 0 && (
-          <EmptyState
-            title="Задач по объекту пока нет"
-            hint={isManager ? 'Поставьте первую задачу и назначьте исполнителя.' : 'Вам сюда ещё ничего не назначали.'}
-          />
+          <div className="mt-6">
+            <EmptyState
+              title="Задач по объекту нет"
+              hint={
+                isManager
+                  ? 'Поставьте первую задачу и назначьте исполнителя.'
+                  : 'Вам сюда ещё ничего не назначали.'
+              }
+            />
+          </div>
         )}
 
-        {grouped.map((group) => (
-          <div key={group.status} className="space-y-2">
-            <h3 className="pt-2 text-[13px] font-medium uppercase tracking-wide text-ink-400">
-              {STATUS_LABELS[group.status]} · {group.items.length}
-            </h3>
-            <div className="card divide-y divide-line overflow-hidden">
+        <div className="mt-7 card overflow-hidden">
+          {grouped.map((group) => (
+            <div key={group.status}>
+              <div className="flex items-center gap-2 border-b border-line bg-paper/70 px-5 py-2">
+                <StatusDot status={group.status} />
+                <span className="text-[12px] font-medium text-ink-500">{STATUS_LABELS[group.status]}</span>
+                <span className="num text-[11px] text-ink-400">{group.items.length}</span>
+              </div>
               {group.items.map((task) => (
                 <TaskRow
                   key={task.id}
@@ -134,8 +154,8 @@ export function ObjectPage() {
                 />
               ))}
             </div>
-          </div>
-        ))}
+          ))}
+        </div>
       </section>
 
       <ObjectFormModal
@@ -161,28 +181,23 @@ export function ObjectPage() {
   );
 }
 
-function TaskRow({
-  task,
-  canDelete,
-  onDelete,
-}: {
-  task: Task;
-  canDelete: boolean;
-  onDelete: () => void;
-}) {
+function TaskRow({ task, canDelete, onDelete }: { task: Task; canDelete: boolean; onDelete: () => void }) {
   return (
-    <div className="group flex items-center gap-3 px-4 py-3 transition-colors hover:bg-paper/70">
-      <Link to={`/tasks/${task.id}`} className="min-w-0 flex-1">
-        <p className="truncate text-sm font-medium">{task.title}</p>
-        <p className="mt-0.5 text-[13px] text-ink-500">
-          {task.assignee?.full_name ?? 'Исполнитель не указан'} · создана {formatDate(task.created_at)}
+    <div className="group flex items-center gap-4 border-b border-line px-5 py-4 last:border-b-0">
+      <Link to={`/tasks/${task.id}`} className="min-w-0 flex-1 outline-offset-4">
+        <p className="truncate text-[15px] font-medium transition-colors duration-150 group-hover:text-accent">
+          {task.title}
+        </p>
+        <p className="mt-0.5 truncate text-[12px] text-ink-500">
+          {task.assignee?.full_name ?? 'исполнитель не назначен'}
+          <span className="px-1.5 text-line-strong">·</span>
+          <span className="num">{formatDate(task.created_at)}</span>
         </p>
       </Link>
-      <StatusBadge status={task.status} size="sm" />
       {canDelete && (
         <button
           type="button"
-          className="btn btn-danger px-2 py-1 text-xs opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100"
+          className="btn btn-ghost px-2 py-1 text-[12px] text-ink-400 opacity-100 transition-opacity duration-150 hover:text-rework focus-visible:opacity-100 sm:opacity-0 sm:group-hover:opacity-100"
           onClick={onDelete}
         >
           Удалить
@@ -191,4 +206,5 @@ function TaskRow({
     </div>
   );
 }
+
 
